@@ -66,6 +66,8 @@
 #include "vtkInfovisCoreModule.h" // For export macro
 #include "vtkGraphAlgorithm.h"
 
+#include <string> // For ivar
+
 class vtkBitArray;
 class vtkMutableDirectedGraph;
 class vtkStringArray;
@@ -77,6 +79,12 @@ public:
   static vtkTableToGraph* New();
   vtkTypeMacro(vtkTableToGraph,vtkGraphAlgorithm);
   void PrintSelf(ostream& os, vtkIndent indent);
+
+  // Description:
+  void SetSource(const char* column);
+
+  // Description:
+  void SetTarget(const char* column);
 
   // Description:
   // Add a vertex to the link graph.  Specify the column name, the domain name
@@ -147,6 +155,8 @@ protected:
   bool Directed;
   vtkMutableDirectedGraph* LinkGraph;
   vtkStringArray* VertexTableDomains;
+  std::string Source;
+  std::string Target;
 
 private:
   vtkTableToGraph(const vtkTableToGraph&); // Not implemented

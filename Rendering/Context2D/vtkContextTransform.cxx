@@ -27,6 +27,17 @@ vtkStandardNewMacro(vtkContextTransform);
 vtkContextTransform::vtkContextTransform()
 {
   this->Transform = vtkSmartPointer<vtkTransform2D>::New();
+  this->PanMouseButton = vtkContextMouseEvent::LEFT_BUTTON;
+  this->PanModifier = vtkContextMouseEvent::NO_MODIFIER;
+  this->ZoomMouseButton = vtkContextMouseEvent::RIGHT_BUTTON;
+  this->ZoomModifier = vtkContextMouseEvent::NO_MODIFIER;
+  this->SecondaryPanMouseButton = vtkContextMouseEvent::NO_BUTTON;
+  this->SecondaryPanModifier = vtkContextMouseEvent::NO_MODIFIER;
+  this->SecondaryZoomMouseButton = vtkContextMouseEvent::LEFT_BUTTON;
+  this->SecondaryZoomModifier = vtkContextMouseEvent::SHIFT_MODIFIER;
+
+  this->ZoomOnMouseWheel = true;
+  this->PanYOnMouseWheel = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -89,6 +100,23 @@ vtkVector2f vtkContextTransform::MapFromParent(const vtkVector2f& point)
   vtkVector2f p;
   this->Transform->InverseTransformPoints(point.GetData(), p.GetData(), 1);
   return p;
+}
+
+//-----------------------------------------------------------------------------
+bool vtkContextTransform::Hit(const vtkContextMouseEvent &mouse)
+{
+}
+
+//-----------------------------------------------------------------------------
+bool vtkContextTransform::MouseMoveEvent(const vtkContextMouseEvent &mouse)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+bool vtkContextTransform::MouseWheelEvent(const vtkContextMouseEvent &mouse, int delta)
+{
+
 }
 
 //-----------------------------------------------------------------------------

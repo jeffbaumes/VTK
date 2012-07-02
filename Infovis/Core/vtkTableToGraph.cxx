@@ -135,6 +135,32 @@ int vtkTableToGraph::ValidateLinkGraph()
 }
 
 //---------------------------------------------------------------------------
+void vtkTableToGraph::SetSource(const char* column)
+{
+  this->Source = column;
+  if (this->Source.length() > 0 && this->Target.length() > 0)
+    {
+    this->ClearLinkVertices();
+    this->AddLinkVertex(this->Source.c_str(), this->Source.c_str());
+    this->AddLinkVertex(this->Target.c_str(), this->Target.c_str());
+    this->AddLinkEdge(this->Source.c_str(), this->Target.c_str());
+    }
+}
+
+//---------------------------------------------------------------------------
+void vtkTableToGraph::SetTarget(const char* column)
+{
+  this->Target = column;
+  if (this->Source.length() > 0 && this->Target.length() > 0)
+    {
+    this->ClearLinkVertices();
+    this->AddLinkVertex(this->Source.c_str(), this->Source.c_str());
+    this->AddLinkVertex(this->Target.c_str(), this->Target.c_str());
+    this->AddLinkEdge(this->Source.c_str(), this->Target.c_str());
+    }
+}
+
+//---------------------------------------------------------------------------
 void vtkTableToGraph::AddLinkVertex(const char* column, const char* domain, int hidden)
 {
   if (!column)

@@ -76,11 +76,69 @@ public:
   virtual vtkVector2f MapFromParent(const vtkVector2f& point);
 
 //BTX
+  vtkSetMacro(PanMouseButton, int);
+  vtkGetMacro(PanMouseButton, int);
+
+  vtkSetMacro(PanModifier, int);
+  vtkGetMacro(PanModifier, int);
+
+  vtkSetMacro(SecondaryPanMouseButton, int);
+  vtkGetMacro(SecondaryPanMouseButton, int);
+
+  vtkSetMacro(SecondaryPanModifier, int);
+  vtkGetMacro(SecondaryPanModifier, int);
+
+  vtkSetMacro(ZoomMouseButton, int);
+  vtkGetMacro(ZoomMouseButton, int);
+
+  vtkSetMacro(ZoomModifier, int);
+  vtkGetMacro(ZoomModifier, int);
+
+  vtkSetMacro(SecondaryZoomMouseButton, int);
+  vtkGetMacro(SecondaryZoomMouseButton, int);
+
+  vtkSetMacro(SecondaryZoomModifier, int);
+  vtkGetMacro(SecondaryZoomModifier, int);
+
+  vtkSetMacro(ZoomOnMouseWheel, bool);
+  vtkGetMacro(ZoomOnMouseWheel, bool);
+  vtkBooleanMacro(ZoomOnMouseWheel, bool);
+
+  vtkSetMacro(PanYOnMouseWheel, bool);
+  vtkGetMacro(PanYOnMouseWheel, bool);
+  vtkBooleanMacro(PanYOnMouseWheel, bool);
+
+  // Description:
+  // Returns true if the transform is interactive, false otherwise.
+  virtual bool Hit(const vtkContextMouseEvent &mouse);
+
+  // Description:
+  // Mouse move event. Perform pan or zoom as specified by the mouse bindings.
+  virtual bool MouseMoveEvent(const vtkContextMouseEvent &mouse);
+
+  // Description:
+  // Mouse wheel event. Perform pan or zoom as specified by mouse bindings.
+  virtual bool MouseWheelEvent(const vtkContextMouseEvent &mouse, int delta);
+//ETX
+
+//BTX
 protected:
   vtkContextTransform();
   ~vtkContextTransform();
 
   vtkSmartPointer<vtkTransform2D> Transform;
+
+  int PanMouseButton;
+  int PanModifier;
+  int ZoomMouseButton;
+  int ZoomModifier;
+  int SecondaryPanMouseButton;
+  int SecondaryPanModifier;
+  int SecondaryZoomMouseButton;
+  int SecondaryZoomModifier;
+
+  bool ZoomOnMouseWheel;
+  bool PanYOnMouseWheel;
 
 private:
   vtkContextTransform(const vtkContextTransform &); // Not implemented.
