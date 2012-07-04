@@ -14,17 +14,19 @@
 =========================================================================*/
 
 #include "vtkContextTransform.h"
-#include "vtkObjectFactory.h"
-#include "vtkContextScenePrivate.h"
+
+#include "vtkCommand.h"
 #include "vtkContext2D.h"
 #include "vtkContextMouseEvent.h"
+#include "vtkContextScenePrivate.h"
 #include "vtkTransform2D.h"
 #include "vtkVector.h"
+#include "vtkVectorOperators.h"
 
 vtkStandardNewMacro(vtkContextTransform);
 
 //-----------------------------------------------------------------------------
-vtkContextTransform::vtkContextTransform()
+vtkContextTransform::vtkContextTransform() : ZoomAnchor(0.0f, 0.0f)
 {
   this->Transform = vtkSmartPointer<vtkTransform2D>::New();
   this->PanMouseButton = vtkContextMouseEvent::LEFT_BUTTON;
@@ -38,6 +40,8 @@ vtkContextTransform::vtkContextTransform()
 
   this->ZoomOnMouseWheel = true;
   this->PanYOnMouseWheel = false;
+
+  this->Interactive = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -105,18 +109,122 @@ vtkVector2f vtkContextTransform::MapFromParent(const vtkVector2f& point)
 //-----------------------------------------------------------------------------
 bool vtkContextTransform::Hit(const vtkContextMouseEvent &mouse)
 {
+  // If we are interactive, we want to catch anything that propagates to the
+  // background, otherwise we do not want any mouse events.
+  return this->Interactive;
+}
+
+//-----------------------------------------------------------------------------
+bool vtkContextTransform::MouseButtonPressEvent(const vtkContextMouseEvent &mouse)
+{
+  if ((this->ZoomMouseButton != vtkContextMouseEvent::NO_BUTTON &&
+        mouse.GetButton() == this->ZoomMouseButton &&
+        mouse.GetModifiers() == this->ZoomModifier) ||
+      (this->SecondaryZoomMouseButton != vtkContextMouseEvent::NO_BUTTON &&
+        mouse.GetButton() == this->SecondaryZoomMouseButton &&
+        mouse.GetModifiers() == this->SecondaryZoomModifier) )
+    {
+    // Determine anchor to zoom in on
+    vtkVector2d screenPos(mouse.GetScreenPos().Cast<double>().GetData());
+    vtkVector2d pos(0.0, 0.0);
+    vtkTransform2D *transform = this->GetTransform();
+    transform->InverseTransformPoints(screenPos.GetData(), pos.GetData(), 1);
+    this->ZoomAnchor = vtkVector2f(pos.Cast<float>().GetData());
+    }
 }
 
 //-----------------------------------------------------------------------------
 bool vtkContextTransform::MouseMoveEvent(const vtkContextMouseEvent &mouse)
 {
+  if ((this->PanMouseButton != vtkContextMouseEvent::NO_BUTTON &&
+        mouse.GetButton() == this->PanMouseButton &&
+        mouse.GetModifiers() == this->PanModifier) ||
+      (this->SecondaryPanMouseButton != vtkContextMouseEvent::NO_BUTTON &&
+        mouse.GetButton() == this->SecondaryPanMouseButton &&
+        mouse.GetModifiers() == this->SecondaryPanModifier) )
+    {
+    // Figure out how much the mouse has moved by in plot coordinates - pan
+    vtkVector2d screenPos(mouse.GetScreenPos().Cast<double>().GetData());
+    vtkVector2d lastScreenPos(mouse.GetLastScreenPos().Cast<double>().GetData());
+    vtkVector2d pos(0.0, 0.0);
+    vtkVector2d last(0.0, 0.0);
 
+    // Go from screen to scene coordinates to work out the delta
+    vtkTransform2D *transform = this->GetTransform();
+    transform->InverseTransformPoints(screenPos.GetData(), pos.GetData(), 1);
+    transform->InverseTransformPoints(lastScreenPos.GetData(), last.GetData(), 1);
+    vtkVector2f delta((last - pos).Cast<float>().GetData());
+    this->Translate(-delta[0], -delta[1]);
+
+    // Mark the scene as dirty
+    this->Scene->SetDirty(true);
+
+    this->InvokeEvent(vtkCommand::InteractionEvent);
+    }
+  if ((this->ZoomMouseButton != vtkContextMouseEvent::NO_BUTTON &&
+        mouse.GetButton() == this->ZoomMouseButton &&
+        mouse.GetModifiers() == this->ZoomModifier) ||
+      (this->SecondaryZoomMouseButton != vtkContextMouseEvent::NO_BUTTON &&
+        mouse.GetButton() == this->SecondaryZoomMouseButton &&
+        mouse.GetModifiers() == this->SecondaryZoomModifier) )
+    {
+    // Figure out how much the mouse has moved and scale accordingly
+    float delta = 0.0f;
+    if (this->Scene->GetSceneHeight() > 0)
+      {
+      delta = static_cast<float>(mouse.GetLastScreenPos()[1] - mouse.GetScreenPos()[1])/this->Scene->GetSceneHeight();
+      }
+
+    // Dragging full screen height zooms 4x.
+    float scaling = exp2(2.0*delta);
+
+    // Zoom in on anchor position
+    this->Translate(this->ZoomAnchor[0], this->ZoomAnchor[1]);
+    this->Scale(scaling, scaling);
+    this->Translate(-this->ZoomAnchor[0], -this->ZoomAnchor[1]);
+
+    // Mark the scene as dirty
+    this->Scene->SetDirty(true);
+
+    this->InvokeEvent(vtkCommand::InteractionEvent);
+    }
 }
 
 //-----------------------------------------------------------------------------
 bool vtkContextTransform::MouseWheelEvent(const vtkContextMouseEvent &mouse, int delta)
 {
+  if (this->ZoomOnMouseWheel)
+    {
+    // Determine current position to zoom in on
+    vtkVector2d screenPos(mouse.GetScreenPos().Cast<double>().GetData());
+    vtkVector2d pos(0.0, 0.0);
+    vtkTransform2D *transform = this->GetTransform();
+    transform->InverseTransformPoints(screenPos.GetData(), pos.GetData(), 1);
+    vtkVector2f zoomAnchor = vtkVector2f(pos.Cast<float>().GetData());
 
+    // Ten "wheels" to double/halve zoom level
+    float scaling = exp2(delta/10.0f);
+
+    // Zoom in on current position
+    this->Translate(zoomAnchor[0], zoomAnchor[1]);
+    this->Scale(scaling, scaling);
+    this->Translate(-zoomAnchor[0], -zoomAnchor[1]);
+
+    // Mark the scene as dirty
+    this->Scene->SetDirty(true);
+
+    this->InvokeEvent(vtkCommand::InteractionEvent);
+    }
+  if (this->PanYOnMouseWheel)
+    {
+    // Ten "wheels" to scroll a screen
+    this->Translate(0.0f, delta/10.0f*this->Scene->GetSceneHeight());
+
+    // Mark the scene as dirty
+    this->Scene->SetDirty(true);
+
+    this->InvokeEvent(vtkCommand::InteractionEvent);
+    }
 }
 
 //-----------------------------------------------------------------------------

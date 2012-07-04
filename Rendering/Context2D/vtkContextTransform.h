@@ -26,6 +26,7 @@
 #include "vtkRenderingContext2DModule.h" // For export macro
 #include "vtkAbstractContextItem.h"
 #include "vtkSmartPointer.h" // Needed for SP ivars.
+#include "vtkVector.h" // Needed for ivars.
 
 class vtkTransform2D;
 
@@ -113,6 +114,10 @@ public:
   virtual bool Hit(const vtkContextMouseEvent &mouse);
 
   // Description:
+  // Mouse press event. Keep track of zoom anchor position.
+  virtual bool MouseButtonPressEvent(const vtkContextMouseEvent &mouse);
+
+  // Description:
   // Mouse move event. Perform pan or zoom as specified by the mouse bindings.
   virtual bool MouseMoveEvent(const vtkContextMouseEvent &mouse);
 
@@ -139,6 +144,8 @@ protected:
 
   bool ZoomOnMouseWheel;
   bool PanYOnMouseWheel;
+
+  vtkVector2f ZoomAnchor;
 
 private:
   vtkContextTransform(const vtkContextTransform &); // Not implemented.
