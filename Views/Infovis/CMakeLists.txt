@@ -1,13 +1,15 @@
 SET(Module_SRCS
   vtkApplyColors.cxx
   vtkApplyIcons.cxx
-  vtkGraphItem.cxx
   vtkGraphLayoutView.cxx
   vtkHierarchicalGraphPipeline.cxx
   vtkHierarchicalGraphView.cxx
   vtkIcicleView.cxx
   vtkInteractorStyleAreaSelectHover.cxx
   vtkInteractorStyleTreeMapHover.cxx
+  vtkMultiItem.cxx
+  vtkMultiLineItem.cxx
+  vtkMultiMarkerItem.cxx
   vtkParallelCoordinatesHistogramRepresentation.cxx
   vtkParallelCoordinatesRepresentation.cxx
   vtkParallelCoordinatesView.cxx
