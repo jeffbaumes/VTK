@@ -300,6 +300,10 @@ void vtkOpenGLContextDevice2D::DrawPointSprites(vtkImageData *sprite,
       this->Storage->SpriteTexture->Render(this->Renderer);
       }
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
     // Must emulate the point sprites - slower but at least they see something.
     GLfloat width = 1.0;
     glGetFloatv(GL_POINT_SIZE, &width);
@@ -308,8 +312,8 @@ void vtkOpenGLContextDevice2D::DrawPointSprites(vtkImageData *sprite,
     // Need to get the model view matrix for scaling factors...
     GLfloat mv[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, mv);
-    float xWidth = width / mv[0];
-    float yWidth = width / mv[5];
+    float xWidth = width; // / mv[0];
+    float yWidth = width; // / mv[5];
 
     // Four 2D points on the quad.
     float p[4 * 2] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
